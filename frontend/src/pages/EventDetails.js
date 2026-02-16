@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
@@ -14,7 +14,7 @@ const EventDetails = () => {
   const [message, setMessage] = useState("");
   const [isRegistered, setIsRegistered] = useState(false);
 
-  const fetchEvent = useCallback(async () => {
+  const fetchEvent = async () => {
     try {
       const response = await axios.get(`${API_URL}/events/${id}`);
       setEvent(response.data);
@@ -23,9 +23,11 @@ const EventDetails = () => {
       console.error("Error fetching event:", error);
       setLoading(false);
     }
-  }, [id]);
+  };
 
-  const checkRegistration = useCallback(async () => {
+  const checkRegistration = async () => {
+    if (!user || !token) return;
+
     try {
       const response = await axios.get(`${API_URL}/registrations/my-events`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -37,14 +39,15 @@ const EventDetails = () => {
     } catch (error) {
       console.error("Error checking registration:", error);
     }
-  }, [id, token]);
+  };
 
   useEffect(() => {
     fetchEvent();
     if (user) {
       checkRegistration();
     }
-  }, [fetchEvent, checkRegistration, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user]);
 
   const handleRegister = async () => {
     if (!user) {
@@ -63,6 +66,7 @@ const EventDetails = () => {
       );
       setMessage("Registration successful!");
       setIsRegistered(true);
+
       fetchEvent();
     } catch (error) {
       setMessage(error.response?.data?.message || "Registration failed");
@@ -81,6 +85,7 @@ const EventDetails = () => {
       });
       setMessage("Registration cancelled successfully");
       setIsRegistered(false);
+
       fetchEvent();
     } catch (error) {
       setMessage(error.response?.data?.message || "Cancellation failed");
@@ -164,9 +169,7 @@ const EventDetails = () => {
 
           {message && (
             <div
-              className={`message ${
-                message.includes("success") ? "success-message" : "error-msg"
-              }`}
+              className={`message ${message.includes("success") ? "success-message" : "error-msg"}`}
             >
               {message}
             </div>

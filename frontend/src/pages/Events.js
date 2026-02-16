@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import EventCard from "../components/EventCard";
 import { API_URL } from "../config";
@@ -19,7 +19,6 @@ const Events = () => {
     "Entertainment",
     "Health",
   ];
-
   const locations = [
     "Bangalore",
     "Mumbai",
@@ -30,28 +29,42 @@ const Events = () => {
     "Goa",
   ];
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = async () => {
     try {
       setLoading(true);
-
       let url = `${API_URL}/events?`;
 
       if (searchTerm) url += `search=${searchTerm}&`;
       if (category) url += `category=${category}&`;
       if (location) url += `location=${location}&`;
 
+      console.log("Fetching events with URL:", url);
+
       const response = await axios.get(url);
-      setEvents(response.data || []);
+      setEvents(response.data);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching events:", error);
-    } finally {
       setLoading(false);
     }
-  }, [searchTerm, category, location]);
+  };
 
   useEffect(() => {
     fetchEvents();
-  }, [fetchEvents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, category, location]);
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
+  };
+
+  const handleLocationChange = (e) => {
+    setLocation(e.target.value);
+  };
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -69,13 +82,13 @@ const Events = () => {
             type="text"
             placeholder="Search events..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearch}
             className="search-input"
           />
 
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={handleCategoryChange}
             className="filter-select"
           >
             <option value="">All Categories</option>
@@ -88,7 +101,7 @@ const Events = () => {
 
           <select
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={handleLocationChange}
             className="filter-select"
           >
             <option value="">All Locations</option>
